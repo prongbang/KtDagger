@@ -1,19 +1,27 @@
 package com.prongbang.ktdagger.main.presenter
 
+import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.snackbar.Snackbar
 import com.prongbang.ktdagger.R
+import com.prongbang.ktdagger.main.detail.DetailActivity
+import com.prongbang.ktdagger.main.presenter.list.MainAdapter
 import dagger.android.support.DaggerAppCompatActivity
 import kotlinx.android.synthetic.main.activity_main.*
+import kotlinx.android.synthetic.main.content_main.*
 import javax.inject.Inject
 
 class MainActivity : DaggerAppCompatActivity(), MainContract.View {
 
 	@Inject
 	lateinit var presenter: MainContract.UserActionListener
+
+	@Inject
+	lateinit var mainAdapter: MainAdapter
 
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
@@ -28,13 +36,25 @@ class MainActivity : DaggerAppCompatActivity(), MainContract.View {
 					.show()
 		}
 
+		initView()
 		presenter.getFeed()
 	}
 
-	override fun showFeed(feed: List<String>) {
-		feed.map {
-			Log.i("MainActivity", it)
+	private fun initView() {
+		rvFeed.apply {
+			layoutManager = LinearLayoutManager(this@MainActivity)
+			adapter = mainAdapter
 		}
+		mainAdapter.onItemClickListener = { feed ->
+			val intent = Intent(this, DetailActivity::class.java).apply {
+				putExtra("ITEM_FEED", feed)
+			}
+			startActivity(intent)
+		}
+	}
+
+	override fun showFeed(feed: List<String>) {
+		mainAdapter.submitList(feed)
 	}
 
 	override fun onCreateOptionsMenu(menu: Menu): Boolean {
